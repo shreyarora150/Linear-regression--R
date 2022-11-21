@@ -1,0 +1,80 @@
+---
+title: "Dawine Studios"
+author: "Shrey"
+date: "2022-10-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo =F}
+X2 = c(16.7,16.8,18.2,16.3,17.3,18.2,15.9,17.2,16.6,16,18.3,17.1,17.4,15.8,17.8,18.4,16.5,16.3,18.1,19.1,16)
+Y = c(174.4,164.4,244.2,154.6,181.6,207.5,152.8,163.2,145.4,137.2,241.9,191.1,232,145.3,161.1,209.7,146.4,144,232.6,224.1,166.5)
+X1  = c(68.5,45.2,91.3,47.8,46.9,66.1,49.5,52,48.9,38.4,87.9,72.8,88.4,42.9,52.5,85.7,41.3,51.7,89.6,82.7,52.3)
+
+
+df = data.frame(Y,X1,X2)
+pairs(df)  
+```
+```{r}
+cor(df)
+model = lm(Y~X1+X2)
+model$coefficients
+summary(model)$r.squared
+summary(model)$adj.r.squared
+```
+
+
+```{r, echo F}
+plot(model$fitted.values, model$residuals)
+abline(h=0) 
+```
+```{r}
+par(mfrow=c(1,2))
+plot(X1,model$residuals)
+abline(h=0)
+plot(X2,model$residuals)
+abline(h=0)
+
+```
+
+```{r}
+X3 = X1*X2
+plot(X3,model$residuals)
+abline(h=0)
+
+```
+```{r}
+anova(lm(Y~1),model)
+```
+```{r}
+## confint on Beta1 and Beta2
+g = length(model$coefficients)-1
+alpha = 0.1
+confint(model,level = 1-alpha/g)[2:3,] ##bonfernoi adjusted 
+```
+```{r}
+## point wise conf interval on mean response
+Xh = c(1,65.4,17.6)
+predict.lm(model,newdata  = data.frame(X1= 65.4,X2=17.6), se.fit = TRUE,interval = 'confidence')
+```
+
+```{r}
+## point wise prediction interval 
+predict.lm(model,newdata  = data.frame(X1= 65.4,X2=17.6), se.fit = TRUE,interval = 'predict')
+```
+```{r}
+## simultaneous predictions
+newdata.df = data.frame(X1=c(65.4,53.1),X2=c(17.6,17.7))
+g = nrow(newdata.df)
+alpha = 0.1
+S = sqrt(g*qf(1-alpha,g,model$df.residual))
+B = qt(1-alpha/(2*g),model$df.residual)
+print(S)
+print(B)
+## predict.lm 
+predict.lm(model,newdata = newdata.df, interval = "prediction", level = 1-(alpha/g))
+```
+
